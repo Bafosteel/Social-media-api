@@ -6,27 +6,29 @@ from tkinter import *
 from tkinter.filedialog import askopenfilename
 import openpyxl
 import ctypes
+import webbrowser
 
-Token='TOKEN'
-session_secret_key='SECRET_KEY'
-byte_session = bytes(str(session_secret_key),"utf8")
-application = 'PUBLIC_KEY'
-byte_application=bytes(str(application),"utf8")
-group_id = str('GROUP_ID')
-byte_group_id = bytes(str(group_id), "utf8")
+# Token='-s-dMSWq.5f6o3uOVBbbt2us.fceNVVr1DcZOT-rsB8cpZVvzia1oTyNT7ccpUuPx7aboRzq05c8m2u-VDaeoYuNyi6'
+# session_secret_key='9c44f53111340c10690559a048975469'
+# byte_session = bytes(str(session_secret_key),"utf8")
+application = 'CBANKJDMEBABABABA'
+byte_application = bytes(str(application), "utf8")
+# group_id = str(53881953321165)
+# byte_group_id = bytes(str(group_id), "utf8")
 
 # Class for VK
 
-class Vk():
 
-    def get_videos(self,path_to_file,name_of_video, token, group_id_1):
+class Vk:
+
+    def get_videos(self, path_to_file, name_of_video, token, group_id_1):
         ids = []
         for i in range(0, len(path_to_file)):
             try:
                 vid = {'video': (str(path_to_file[i]),
                                  open(r''+str(path_to_file[i]), 'rb'))}
                 method = 'https://api.vk.com/method/video.save?'
-                data = dict(access_token=token, gid=group_id_1,name=name_of_video[i])
+                data = dict(access_token=token, gid=group_id_1, name=name_of_video[i])
                 response = requests.post(method, data)
                 result = json.loads(response.text)
 
@@ -36,16 +38,16 @@ class Vk():
 
                 ids.append('video-' + str(group_id_1) + '_' + str(result['video_id']))
             except:
-                # print("This is something else")
+                print("This is something else")
                 ids.append(str(path_to_file[i]))
         return ids
 
-    def get_image_ids(self,path_to_file,token,group_id_1):
+    def get_image_ids(self, path_to_file, token, group_id_1):
         # Получаем id изображения
-        id_s=[]
+        id_s = []
         for path in path_to_file:
             try:
-                # путь к вашему изображению
+                # Путь к вашему изображению
                 img = {'photo': (str(path), open(r''+str(path), 'rb'))}
 
                 # Получаем ссылку для загрузки изображений
@@ -72,81 +74,84 @@ class Vk():
 
         return id_s
 
-    def start_Vk(self,private_post,post_with_button, message,type_of_attachment,
-                 path_to_file,link_button,link_title,link_image,name_of_video, Token, group_ids):
-        result = self.get_image_ids(path_to_file,Token,group_ids)
-        video = self.get_videos(path_to_file,name_of_video,Token,group_ids)
+    def start_vk(self, private_post, post_with_button, message, type_of_attachment,
+                 path_to_file, link_button, link_title, link_image, name_of_video, token, group_ids):
+        result = self.get_image_ids(path_to_file, token, group_ids)
+        video = self.get_videos(path_to_file, name_of_video, token, group_ids)
         posts = []
         group_id = "-" + str(group_ids)
-        buttons = {'Запустить':'app_join','Играть':'app_game_join','Перейти':'open_url','Открыть':'open',
-                   'Подробнее':'more','Позвонить':'call','Забронировать':'book','Записаться':'enroll',
-                   'Зарегистрироваться':'register','Купить':'buy','Купить билет':'but_ticket','Заказать':'order',
-                   'Установить':'install','Связаться':'contact','Заполнить':'fill','Подписаться':'join_public',
-                   'Я пойду':'join_event','Вступить':'join','Связаться_2':'im','Написать':'im2'}
+        buttons = {'Запустить': 'app_join', 'Играть': 'app_game_join', 'Перейти': 'open_url', 'Открыть': 'open',
+                   'Подробнее': 'more', 'Позвонить': 'call', 'Забронировать': 'book', 'Записаться': 'enroll',
+                   'Зарегистрироваться': 'register', 'Купить': 'buy', 'Купить билет': 'but_ticket', 'Заказать': 'order',
+                   'Установить': 'install', 'Связаться': 'contact', 'Заполнить': 'fill', 'Подписаться': 'join_public',
+                   'Я пойду': 'join_event', 'Вступить': 'join', 'Связаться_2': 'im', 'Написать': 'im2'}
 
         # Создаем посты
-        for i in range(0,len(private_post)):
-            if ('photo' in type_of_attachment[i]):
+        for i in range(0, len(private_post)):
+            if 'photo' in type_of_attachment[i]:
                 # print('photo')
-                if ("private" not in private_post[i]):
+                if "private" not in private_post[i]:
                     # print("public")
                     # Создаем пост
                     r = requests.post('https://api.vk.com/method/wall.post',
-                                    params={'owner_id': group_id, 'access_token': Token, 'from_group': 1,
+                                      params={'owner_id': group_id, 'access_token': token, 'from_group': 1,
                                               'message': str(message[i]),
                                               'attachments': str(result[i])})
                     response = r.json()
                     posts.append('https://vk.com/wall-'+str(group_id)[1:]+'_'+str(response['response']['post_id']))
                 else:
                     # print("private")
-                    if ('yes' in post_with_button[i]):
+                    if 'yes' in post_with_button[i]:
                         # Создаем скрытый пост с кнопкой и с фото
                         r = requests.post('https://api.vk.com/method/wall.postAdsStealth',
-                                        params={'owner_id': group_id, 'access_token': Token, 'from_group': 1,
-                                                'message': str(message[i]),
-                                                'link_button': str(buttons[link_button[i]]),
-                                                'link_image': str(link_image[i]),
-                                                'link_title': str(link_title[i]),
-                                                'attachments': str(result[i])})
+                                          params={'owner_id': group_id, 'access_token': token, 'from_group': 1,
+                                                  'message': str(message[i]),
+                                                  'link_button': str(buttons[link_button[i]]),
+                                                  'link_image': str(link_image[i]),
+                                                  'link_title': str(link_title[i]),
+                                                  'attachments': str(result[i])})
                         response = r.json()
-                        posts.append('https://vk.com/wall-' + str(group_id)[1:]+'_'+ str(response['response']['post_id']))
+                        print(response)
+                        posts.append('https://vk.com/wall-' + str(group_id)[1:]+'_'
+                                     + str(response['response']['post_id']))
                     else:
                         # Создаем скрытый пост без кнопки и с фото
                         r = requests.post('https://api.vk.com/method/wall.postAdsStealth',
-                                          params={'owner_id': group_id, 'access_token': Token, 'from_group': 1,
+                                          params={'owner_id': group_id, 'access_token': token, 'from_group': 1,
                                                   'message': str(message[i]),
                                                   'attachments': str(result[i])})
                         response = r.json()
                         posts.append(
                             'https://vk.com/wall-' + str(group_id)[1:] + '_' + str(response['response']['post_id']))
             else:
-                # print('video')
-                if ("private" not in private_post[i]):
-                    # print("public")
+                print('video')
+                if "private" not in private_post[i]:
+                    print("public")
                     # Создаем пост
                     r = requests.post('https://api.vk.com/method/wall.post',
-                                    params={'owner_id': group_id, 'access_token': Token, 'from_group': 1,
+                                      params={'owner_id': group_id, 'access_token': token, 'from_group': 1,
                                               'message': str(message[i]),
                                               'attachments': str(video[i])})
                     response = r.json()
                     posts.append('https://vk.com/wall-'+str(group_id)[1:]+'_'+str(response['response']['post_id']))
                 else:
-                    # print("private")
-                    if ('yes' in post_with_button[i]):
+                    print("private")
+                    if 'yes' in post_with_button[i]:
                         # Создаем скрытый пост с кнопкой и с видеозаписью
                         r = requests.post('https://api.vk.com/method/wall.postAdsStealth',
-                                        params={'owner_id': group_id, 'access_token': Token, 'from_group': 1,
-                                                'message': str(message[i]),
-                                                'link_button': str(link_button[i]),
-                                                'link_image': str(link_image[i]),
-                                                'link_title': str(link_title[i]),
-                                                'attachments': str(video[i])})
+                                          params={'owner_id': group_id, 'access_token': token, 'from_group': 1,
+                                                  'message': str(message[i]),
+                                                  'link_button': str(link_button[i]),
+                                                  'link_image': str(link_image[i]),
+                                                  'link_title': str(link_title[i]),
+                                                  'attachments': str(video[i])})
                         response = r.json()
-                        posts.append('https://vk.com/wall-' + str(group_id)[1:]+'_'+ str(response['response']['post_id']))
+                        posts.append('https://vk.com/wall-' + str(group_id)[1:] + '_' +
+                                     str(response['response']['post_id']))
                     else:
                         # Создаем скрытый пост без кноки, но с видеозаписью
                         r = requests.post('https://api.vk.com/method/wall.postAdsStealth',
-                                          params={'owner_id': group_id, 'access_token': Token, 'from_group': 1,
+                                          params={'owner_id': group_id, 'access_token': token, 'from_group': 1,
                                                   'message': str(message[i]),
                                                   'attachments': str(video[i])})
                         response = r.json()
@@ -156,8 +161,9 @@ class Vk():
 
 # Class for OK
 
-class Ok():
-    def get_video(self, path_to_file, name_of_video):
+
+class Ok:
+    def get_video(self, path_to_file, name_of_video, token, group_id, byte_group_id, byte_session):
         print(path_to_file)
         byte_path_to_file = []
         byte_name_of_video = []
@@ -172,7 +178,7 @@ class Ok():
             try:
                 video = dict(application_key=str(application), file_name=str(path_to_file[i]),
                              file_size=0, gid=str(group_id),
-                             method='video.getUploadUrl', access_token=Token)
+                             method='video.getUploadUrl', access_token=token)
 
                 signature_for_video = hashlib.md5(b"application_key=" + byte_application +
                                                   b"file_name=" + byte_path_to_file[i] +
@@ -203,8 +209,8 @@ class Ok():
                     )
                     print(response.status_code)
                 except Exception as ex:
-                    print(u"1" + str(ex.message))
-                    errors_video.append(ex.message)
+                    print(u"1" + str(ex))
+                    errors_video.append(ex)
 
                 # Заканчиваем процесс заливки видео
                 bytes_video_id = bytes(str(video_id), "utf8")
@@ -212,7 +218,7 @@ class Ok():
                 video_update = dict(application_key=application,
                                     method='video.update',
                                     title=str(name_of_video[i]),
-                                    vid=video_id, access_token=Token)
+                                    vid=video_id, access_token=token)
 
                 signature_for_video_update = hashlib.md5(b"application_key=" + byte_application +
                                                          b"method=video.update"
@@ -229,7 +235,7 @@ class Ok():
                 ids.append(str(path_to_file[i]))
         return ids
 
-    def get_image_id(self, path_to_file):
+    def get_image_id(self, path_to_file, token, group_id, byte_group_id, byte_session):
         # Получаем id изображения
         id_s = []
         errors_photo = []
@@ -237,7 +243,7 @@ class Ok():
         for path in path_to_file:
             try:
                 photo = dict(application_key=application, gid=group_id,
-                             method='photosV2.getUploadUrl', access_token=Token)
+                             method='photosV2.getUploadUrl', access_token=token)
 
                 signature_for_photo = hashlib.md5(b"application_key=" + byte_application +
                                                   b"gid=" + byte_group_id +
@@ -268,6 +274,7 @@ class Ok():
                     photo_token = str(response.json()['photos'][photo_id]['token'])
                     id_s.append(photo_token)
                 except Exception as ex:
+                    ex.message = []
                     print(u"1" + str(ex.message))
                     errors_photo.append(ex.message)
                 print(id_s)
@@ -277,28 +284,32 @@ class Ok():
 
         return id_s
 
-    def start_ok(self,private_post, post_with_button, message, type_of_attachment,
-                 path_to_file, link_button, link_title, link_image, name_of_video):
-        result = self.get_image_id(path_to_file)
-        video = self.get_video(path_to_file, name_of_video)
+    def start_ok(self, private_post, post_with_button, message, type_of_attachment,
+                 path_to_file, link_button, link_title, link_image, name_of_video, token, session_key,
+                 group_id):
+        session_secret_key = session_key
+        byte_session = bytes(str(session_secret_key), "utf8")
+        byte_group_id = bytes(str(group_id), "utf8")
+
+        result = self.get_image_id(path_to_file, token, group_id, byte_group_id, byte_session)
+        video = self.get_video(path_to_file, name_of_video, token, group_id, byte_group_id, byte_session)
         posts = []
         for i in range(0, len(private_post)):
-            if ('photo' in type_of_attachment[i]):
+            if 'photo' in type_of_attachment[i]:
                 print('photo')
                 if 'private' not in private_post[i]:
                     print('public')
                     print(result[i])
                     attachment = " {\"media\": [{\"type\": \"photo\",\"list\": " \
                                  "[{\"id\": \"" + result[i] + "\" }]},"" \
-                                 ""{\"type\": \"link\",\"url\": \"https://apiok.ru/\"},"" \
                                  ""{\"type\": \"text\",\"text\": \"" + message[i] + "\"}]}"
 
                     byte_attachment = bytes(attachment, "utf8")
 
                     data = dict(application_key=application, attachment=attachment, format='json', gid=group_id,
-                                method='mediatopic.post', type='GROUP_THEME', access_token=Token)
+                                method='mediatopic.post', type='GROUP_THEME', access_token=token)
 
-                    signature_for_post = hashlib.md5(b"application_key=" + byte_application + b"attachment="+
+                    signature_for_post = hashlib.md5(b"application_key=" + byte_application + b"attachment=" +
                                                      byte_attachment + b"format=jsongid=" + byte_group_id +
                                                      b"method=mediatopic.post"
                                                      b"type=GROUP_THEME" + byte_session).hexdigest()
@@ -306,13 +317,13 @@ class Ok():
                 else:
                     print('private')
                     attachment = " {\"media\": [{\"type\": \"link\","" \
-                    ""\"url\": \"" + result[i] + "\"}," "{\"type\": \"text\",\"text\": \"" \
-                                     + message[i] + "\"}]}"
+                    ""\"url\": \"" + result[i] + "\"}," "{\"type\": \"text\",\"text\": \"" +\
+                                 message[i] + "\"}]}"
 
                     byte_attachment = bytes(attachment, "utf8")
                     data = dict(application_key=application, attachment=attachment, format='json', gid=group_id,
                                 hidden_post='true',
-                                method='mediatopic.post', type='GROUP_THEME', access_token=Token)
+                                method='mediatopic.post', type='GROUP_THEME', access_token=token)
 
                     signature_for_post = hashlib.md5(
                         b"application_key=" + byte_application + b"attachment=" + byte_attachment
@@ -332,16 +343,14 @@ class Ok():
 
             else:
                 print('video')
-                attachment = " {\"media\": [{\"type\": \"movie-reshare\"," \
-                                "\"movieId\": \"" + str(video[i]) + "\"},"" \
-                                ""{\"type\": \"link\",\"url\": "" \
-                                ""\"https://apiok.ru/\"},"" \
-                                ""{\"type\": \"text\",\"text\": \"" + message[i] + "\"}]}"
+                attachment = " {\"media\": [{\"type\": \"movie-reshare\","" \
+                ""\"movieId\": \"" + str(video[i]) + "\"},"" \
+                ""{\"type\": \"text\",\"text\": \"" + message[i] + "\"}]}"
                 byte_attachment = bytes(attachment, "utf8")
 
                 if 'private' not in private_post[i]:
                     data = dict(application_key=application, attachment=attachment, format='json', gid=group_id,
-                                method='mediatopic.post', type='GROUP_THEME', access_token=Token)
+                                method='mediatopic.post', type='GROUP_THEME', access_token=token)
 
                     signature_for_post = hashlib.md5(
                         b"application_key=" + byte_application + b"attachment=" + byte_attachment
@@ -351,7 +360,7 @@ class Ok():
                 else:
                     data = dict(application_key=application, attachment=attachment, format='json', gid=group_id,
                                 hidden_post='true',
-                                method='mediatopic.post', type='GROUP_THEME', access_token=Token)
+                                method='mediatopic.post', type='GROUP_THEME', access_token=token)
 
                     signature_for_post = hashlib.md5(
                         b"application_key=" + byte_application + b"attachment=" + byte_attachment
@@ -370,8 +379,9 @@ class Ok():
 
         return posts
 
+
 class Gui(Toplevel, Vk, Ok):
-    def __init__(self, parent, title="Обработка файлов"):
+    def __init__(self, parent, title="Работа с API"):
         Toplevel.__init__(self, parent)
         parent.geometry("250x250+100+150")
         if title:
@@ -411,7 +421,7 @@ class Gui(Toplevel, Vk, Ok):
         type_of_attachment = []
         name_of_video = []
         for i in range(1, sheet.max_row):
-            if ((sheet.cell(row=i, column=1).value) == None):
+            if sheet.cell(row=i, column=1).value is None:
                 max_row = i - 1
                 break
             else:
@@ -423,14 +433,14 @@ class Gui(Toplevel, Vk, Ok):
             message.append(sheet.cell(row=i, column=3).value)
             type_of_attachment.append(sheet.cell(row=i, column=4).value)
             name_of_video.append(sheet.cell(row=i, column=5).value)
-            path_to_file.append(str(sheet.cell(row=i, column=6).value).replace('\\','/'))
+            path_to_file.append(str(sheet.cell(row=i, column=6).value).replace('\\', '/'))
             link_button.append(sheet.cell(row=i, column=7).value)
             link_title.append(sheet.cell(row=i, column=8).value)
             link_image.append(sheet.cell(row=i, column=9).value)
-        return private_post,post_with_button, message,type_of_attachment, \
-               path_to_file,link_button,link_title,link_image,name_of_video
+        return private_post, post_with_button, message, type_of_attachment,\
+               path_to_file, link_button, link_title, link_image, name_of_video
 
-    def refill_table(self,posts):
+    def refill_table(self, posts):
         wb = openpyxl.load_workbook(str(self.text_1.get()))
         sheet = wb.worksheets[0]
         for i in range(0, len(posts)):
@@ -445,24 +455,33 @@ class Gui(Toplevel, Vk, Ok):
     def start(self):
         private_post, post_with_button, message, type_of_attachment, \
         path_to_file, link_button, link_title, link_image, name_of_video = self.get_columns_data()
-        Token = str(self.text_3.get())
+        token = str(self.text_3.get())
         group_id = str(self.text_2.get())
+        session_key = str(self.text_4.get())
         if self.var_1.get() and not self.var_2.get():
             print('vk')
-            posts = self.start_Vk(private_post, post_with_button, message, type_of_attachment,
+            print(token)
+            posts = self.start_vk(private_post, post_with_button, message, type_of_attachment,
                                   path_to_file, link_button, link_title, link_image, name_of_video,
-                                  Token,group_id)
+                                  token, group_id)
         elif self.var_2.get() and not self.var_1.get():
             print('ok')
             posts = self.start_ok(private_post, post_with_button, message, type_of_attachment,
-                                  path_to_file, link_button, link_title, link_image, name_of_video)
+                                  path_to_file, link_button, link_title, link_image, name_of_video, token, session_key,
+                                  group_id)
         elif self.var_1.get() and self.var_2.get():
             print('vk and ok')
+            posts_vk = self.start_vk(private_post, post_with_button, message, type_of_attachment,
+                                     path_to_file, link_button, link_title, link_image, name_of_video,
+                                     token, group_id)
+
+            posts_ok = self.start_ok(private_post, post_with_button, message, type_of_attachment,
+                                     path_to_file, link_button, link_title, link_image, name_of_video, token,
+                                     session_key, group_id)
+            posts = posts_ok + posts_vk
         else:
             message = 'Укажите требуемую социальную сеть'
             ctypes.windll.user32.MessageBoxW(0, message, 'Работа с API', 0)
-            print('lax')
-            return {}
         return self.refill_table(posts)
 
     def text_4_on(self):
@@ -472,6 +491,21 @@ class Gui(Toplevel, Vk, Ok):
             self.text_4.insert(END, "Укажите Сессионный ключ")
         else:
             self.text_4["state"] = "disabled"
+
+    def ok_token(self):
+        webbrowser.open('https://connect.ok.ru/oauth/authorize?'
+                        'client_id=1262005248'
+                        '&scope=GROUP_CONTENT,VIDEO_CONTENT,VALUABLE_ACCESS,PHOTO_CONTENT'
+                        '&response_type=token'
+                        '&redirect_uri=https://oauth.mycdn.me/blank.html')
+
+    def vk_token(self):
+        webbrowser.open('https://oauth.vk.com/authorize?client_id=6343109'
+                        '&display=page&redirect_uri=https://oauth.vk.com/blank.html'
+                        '&scope=wall,photos,video,ads,groups'
+                        '&response_type=token'
+                        '&v=5.71'
+                        '&state=123456')
 
     def dialog(self, parent):
         self.parent = parent
@@ -495,7 +529,6 @@ class Gui(Toplevel, Vk, Ok):
         self.chk_2 = Checkbutton(parent, text="ОК", variable=self.var_2, command=self.text_4_on)
         self.text_4 = Entry(parent, width=30, state=DISABLED, disabledforeground=parent.cget('bg'))
 
-
         self.label_1.pack()
         self.text_1.pack()
         self.but_1.pack()
@@ -514,7 +547,12 @@ class Gui(Toplevel, Vk, Ok):
         self.but_start = Button(parent, text="Выполнить", command=self.start)
         self.but_start.pack()
 
+        # auth buttons
+        self.but_auth_vk = Button(parent, text="Получить токен для VK", command=self.vk_token)
+        self.but_auth_vk.pack()
 
+        self.but_auth_ok = Button(parent, text="Получить токен/session key для OK", command=self.ok_token)
+        self.but_auth_ok.pack()
 
 
 if __name__ == "__main__":
@@ -522,3 +560,4 @@ if __name__ == "__main__":
         root.minsize(width=500, height=400)
         gui = Gui(root)
         root.mainloop()
+
